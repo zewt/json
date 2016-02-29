@@ -2956,7 +2956,7 @@ class basic_json
                std::enable_if <
                    not std::is_pointer<ValueType>::value
                    and not std::is_same<ValueType, typename string_t::value_type>::value
-#ifndef _MSC_VER  // Fix for issue #167 operator<< abiguity under VS2015
+#if !defined(_MSC_VER) || defined(ANDROID)  // Fix for issue #167 operator<< ambiguity under non-Android VS2015
                    and not std::is_same<ValueType, std::initializer_list<typename string_t::value_type>>::value
 #endif
                    , int >::type = 0 >
