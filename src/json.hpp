@@ -55,6 +55,42 @@ namespace nlohmann
 */
 namespace
 {
+#if defined(__ANDROID__) || defined(__MINGW32__)
+// Work around functions that aren't available on Android yet.
+namespace fixedstd
+{
+    template <typename T>
+    std::string to_string(T v)
+    {
+        std::ostringstream ss;
+        ss << v;
+        return ss.str();
+    }
+
+    inline long long int strtoll(const char* str, char** str_end, int base)
+    {
+        return ::strtoll(str, str_end, base);
+    }
+
+    inline long long unsigned strtoull(const char* str, char** str_end, int base)
+    {
+        return ::strtoull(str, str_end, base);
+    }
+
+    inline float strtof(const char* str, char** str_end)
+    {
+        return ::strtof(str, str_end);
+    }
+
+    inline long double strtold(const char* str, char** str_end)
+    {
+        return ::strtold(str, str_end);
+    }
+}
+#else
+namespace fixedstd = std;
+#endif
+
 /*!
 @brief Helper to determine whether there's a key_type for T.
 @sa http://stackoverflow.com/a/7728728/266378
@@ -3011,7 +3047,7 @@ class basic_json
             catch (std::out_of_range&)
             {
                 // create better exception explanation
-                throw std::out_of_range("array index " + std::to_string(idx) + " is out of range");
+                throw std::out_of_range("array index " + fixedstd::to_string(idx) + " is out of range");
             }
         }
         else
@@ -3055,7 +3091,7 @@ class basic_json
             catch (std::out_of_range&)
             {
                 // create better exception explanation
-                throw std::out_of_range("array index " + std::to_string(idx) + " is out of range");
+                throw std::out_of_range("array index " + fixedstd::to_string(idx) + " is out of range");
             }
         }
         else
@@ -6206,7 +6242,7 @@ class basic_json
                     // use integer array index as key
                     case value_t::array:
                     {
-                        return std::to_string(array_index);
+                        return fixedstd::to_string(array_index);
                     }
 
                     // use key from the object
@@ -8186,7 +8222,7 @@ basic_json_parser_63:
         */
         long double str_to_float_t(long double* /* type */, char** endptr) const
         {
-            return std::strtold(reinterpret_cast<typename string_t::const_pointer>(m_start), endptr);
+            return fixedstd::strtold(reinterpret_cast<typename string_t::const_pointer>(m_start), endptr);
         }
 
         /*!
@@ -8226,7 +8262,7 @@ basic_json_parser_63:
         */
         float str_to_float_t(float* /* type */, char** endptr) const
         {
-            return std::strtof(reinterpret_cast<typename string_t::const_pointer>(m_start), endptr);
+            return fixedstd::strtof(reinterpret_cast<typename string_t::const_pointer>(m_start), endptr);
         }
 
         /*!
@@ -8298,7 +8334,7 @@ basic_json_parser_63:
             {
                 // positive, parse with strtoull and attempt cast to
                 // number_unsigned_t
-                if (attempt_cast(std::strtoull(reinterpret_cast<typename string_t::const_pointer>(m_start), &endptr,
+                if (attempt_cast(fixedstd::strtoull(reinterpret_cast<typename string_t::const_pointer>(m_start), &endptr,
                                                10), result.m_value.number_unsigned))
                 {
                     result.m_type = value_t::number_unsigned;
@@ -8313,7 +8349,7 @@ basic_json_parser_63:
             {
                 // Negative, parse with strtoll and attempt cast to
                 // number_integer_t
-                if (attempt_cast(std::strtoll(reinterpret_cast<typename string_t::const_pointer>(m_start), &endptr,
+                if (attempt_cast(fixedstd::strtoll(reinterpret_cast<typename string_t::const_pointer>(m_start), &endptr,
                                               10), result.m_value.number_integer))
                 {
                     result.m_type = value_t::number_integer;
